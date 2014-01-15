@@ -55,7 +55,8 @@
         NSRange range = NSMakeRange(NSNotFound, NSNotFound);
         do {
             NSString *text = mainStr.string;
-            range = [text rangeOfString:pattern.regex options:NSRegularExpressionSearch range:NSMakeRange(offset, text.length-offset)];
+            NSInteger end = text.length-offset;
+            range = [text rangeOfString:pattern.regex options:NSRegularExpressionSearch range:NSMakeRange(offset, end)];
             if(range.location != NSNotFound)
                 offset += range.location + range.length;
             else
@@ -77,15 +78,24 @@
     }
     if(self.detector)
     {
-        NSString *text = mainStr.string;
-        NSArray *array = [self.detector matchesInString:text options:kNilOptions range:NSMakeRange(0, mainStr.length)];
-        for(NSTextCheckingResult *result in array)
-        {
-            NSString *subText = [text substringWithRange:result.range];
-            DCTextOptions *opts = self.detectorCallback(result,subText);
-            NSAttributedString *replaceStr = [self generateString:opts replace:subText];
-            [mainStr replaceCharactersInRange:result.range withAttributedString:replaceStr];
-        }
+        BOOL finished = YES;
+        do {
+            NSString *text = mainStr.string;
+            finished = YES;
+            NSArray *array = [self.detector matchesInString:text options:kNilOptions range:NSMakeRange(0, mainStr.length)];
+            for(NSTextCheckingResult *result in array)
+            {
+                NSString *subText = [text substringWithRange:result.range];
+                DCTextOptions *opts = self.detectorCallback(result,subText);
+                NSAttributedString *replaceStr = [self generateString:opts replace:subText];
+                [mainStr replaceCharactersInRange:result.range withAttributedString:replaceStr];
+                if(replaceStr.length != result.range.length)
+                {
+                    finished = NO;
+                    break;
+                }
+            }
+        } while (!finished);
     }
     return mainStr;
 }
@@ -122,6 +132,8 @@
 -(NSDictionary*)generateAttributes:(DCTextOptions*)options
 {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    if(options.link)
+        [dict setObject:options.link forKey:NSLinkAttributeName];
     if(options.font)
         [dict setObject:options.font forKey:NSFontAttributeName];
     if(options.color)
@@ -178,6 +190,26 @@
 #endif
     }
     return _font;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
++(CGFloat)suggestedHeight:(NSAttributedString*)attributedText width:(CGFloat)width
+{
+    if(attributedText)
+    {
+        CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString((__bridge CFAttributedStringRef)attributedText);
+        //NSLog(@"frame.size.width: %f",frame.size.width);
+        CGSize size = CTFramesetterSuggestFrameSizeWithConstraints(framesetter,CFRangeMake(0,0),NULL,CGSizeMake(width,10000.0f),NULL);
+        //NSLog(@"size: %f",size.height);
+        __block CGFloat height = MAX(0.f , ceilf(size.height));
+        CFRelease(framesetter);
+        [attributedText enumerateAttribute:NSAttachmentAttributeName inRange:NSMakeRange(0, attributedText.length) options:0
+                                usingBlock:^(id value,NSRange range, BOOL *stop){
+                                    NSTextAttachment *attach = value;
+                                    height += attach.bounds.size.height;
+                                }];
+        return height;
+    }
+    return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////

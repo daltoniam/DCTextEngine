@@ -60,6 +60,11 @@ typedef NSColor DCColor;
 @property(nonatomic,strong)DCColor *strikeColor;
 
 /**
+ Set a link to go to
+ */
+@property(nonatomic,copy)NSString *link;
+
+/**
  Set the highlight color.
  */
 @property(nonatomic,strong)DCColor *hightlightColor;
@@ -134,6 +139,11 @@ typedef DCTextOptions* (^DCTextEngineDetector)(NSTextCheckingResult *result, NSS
  @return returns a italic and bold version of the font property.
  */
 -(DCFont*)boldAndItalicFont;
+
+/**
+ @return returns a suggestedHeight, based on the attributedString.
+ */
++(CGFloat)suggestedHeight:(NSAttributedString*)attributedText width:(CGFloat)width;
 
 ///-------------------------------
 /// @name Default engines
