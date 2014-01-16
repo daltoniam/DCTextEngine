@@ -59,11 +59,13 @@
             NSString *text = mainStr.string;
             NSInteger end = text.length-offset;
             range = [text rangeOfString:pattern.regex options:NSRegularExpressionSearch range:NSMakeRange(offset, end)];
+            //NSLog(@"range is: loc: %d len: %d",range.location,range.length);
             if(range.location != NSNotFound)
-                offset += range.location + range.length;
+                offset = (range.location + range.length);
             else
                 break;
             NSString *subText = [text substringWithRange:range];
+            //NSLog(@"subtext: %@",subText);
             DCTextOptions *opts = nil;
             if(pattern.callback)
                 opts = pattern.callback(pattern.regex,subText);
@@ -72,6 +74,11 @@
             NSString *replaceText = opts.replaceText;
             if(!replaceText)
                 replaceText = subText;
+            int move = replaceText.length - subText.length;
+            if(opts.attachment)
+                offset = 0;
+            else
+                offset += move;
             NSAttributedString *replaceStr = [self generateString:opts replace:replaceText];
             [mainStr replaceCharactersInRange:range withAttributedString:replaceStr];
             if(offset > mainStr.length)
@@ -209,7 +216,7 @@
         [attributedText enumerateAttribute:NSAttachmentAttributeName inRange:NSMakeRange(0, attributedText.length) options:0
                                 usingBlock:^(id value,NSRange range, BOOL *stop){
                                     NSTextAttachment *attach = value;
-                                    height += attach.bounds.size.height;
+                                    height += attach.bounds.size.height-10;
                                 }];
         return height;
     }
