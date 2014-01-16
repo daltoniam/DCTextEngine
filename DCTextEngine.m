@@ -49,6 +49,8 @@
 -(NSAttributedString*)parse:(NSString*)string
 {
     NSMutableAttributedString *mainStr = [[NSMutableAttributedString alloc] initWithString:string];
+    [mainStr addAttribute:NSForegroundColorAttributeName value:self.color range:NSMakeRange(0, mainStr.length)];
+    [mainStr addAttribute:NSFontAttributeName value:self.font range:NSMakeRange(0, mainStr.length)];
     for(DCTextPattern *pattern in self.patterns)
     {
         int offset = 0;
@@ -136,6 +138,8 @@
         [dict setObject:options.link forKey:NSLinkAttributeName];
     if(options.font)
         [dict setObject:options.font forKey:NSFontAttributeName];
+    else
+        [dict setObject:self.font forKey:NSFontAttributeName];
     if(options.color)
         [dict setObject:options.color forKey:NSForegroundColorAttributeName];
     if(options.isUnderline)

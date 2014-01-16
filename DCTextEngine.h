@@ -98,6 +98,11 @@ typedef DCTextOptions* (^DCTextEngineDetector)(NSTextCheckingResult *result, NSS
 @property(nonatomic,strong)DCFont *font;
 
 /**
+ The base color to use for styling. If nil the standard OS color is used (which is black).
+ */
+@property(nonatomic,strong)DCColor *color;
+
+/**
  converts the string to the appropriate NSAttributedString.
  @param source string to convert.
  @return new NSAttributedString with proper styling from the source string
