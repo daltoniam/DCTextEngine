@@ -40,6 +40,11 @@ typedef NSColor DCColor;
 @property(nonatomic,strong)DCColor *color;
 
 /**
+ Set the paragraph style.
+ */
+@property(nonatomic,strong)NSParagraphStyle *paragraphStyle;
+
+/**
  Set the replacement text.
  */
 @property(nonatomic,copy)NSString *replaceText;
@@ -101,6 +106,11 @@ typedef DCTextOptions* (^DCTextEngineDetector)(NSTextCheckingResult *result, NSS
  The base color to use for styling. If nil the standard OS color is used (which is black).
  */
 @property(nonatomic,strong)DCColor *color;
+
+/**
+ The base paragraph style. If nil the standard paragraph style used.
+ */
+@property(nonatomic,strong)NSParagraphStyle *paragraphStyle;
 
 /**
  converts the string to the appropriate NSAttributedString.

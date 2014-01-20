@@ -49,8 +49,12 @@
 -(NSAttributedString*)parse:(NSString*)string
 {
     NSMutableAttributedString *mainStr = [[NSMutableAttributedString alloc] initWithString:string];
-    [mainStr addAttribute:NSForegroundColorAttributeName value:self.color range:NSMakeRange(0, mainStr.length)];
-    [mainStr addAttribute:NSFontAttributeName value:self.font range:NSMakeRange(0, mainStr.length)];
+    if(self.color)
+        [mainStr addAttribute:NSForegroundColorAttributeName value:self.color range:NSMakeRange(0, mainStr.length)];
+    if(self.font)
+        [mainStr addAttribute:NSFontAttributeName value:self.font range:NSMakeRange(0, mainStr.length)];
+    if(self.paragraphStyle)
+        [mainStr addAttribute:NSParagraphStyleAttributeName value:self.paragraphStyle range:NSMakeRange(0, mainStr.length)];
     for(DCTextPattern *pattern in self.patterns)
     {
         int offset = 0;
@@ -161,12 +165,19 @@
     }
     if(options.textEffect)
         [dict setObject:options.textEffect forKey:NSTextEffectAttributeName];
+    if(options.paragraphStyle)
+        [dict setObject:options.paragraphStyle forKey:NSParagraphStyleAttributeName];
     return dict;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 -(DCFont*)boldFont
 {
     return [self processFont:kCTFontBoldTrait];
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+-(DCFont*)fontWeight:(CGFloat)weight
+{
+    return [self processFont:kCTFontWeightTrait];
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 -(DCFont*)italicFont
