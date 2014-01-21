@@ -57,7 +57,7 @@
         [mainStr addAttribute:NSParagraphStyleAttributeName value:self.paragraphStyle range:NSMakeRange(0, mainStr.length)];
     for(DCTextPattern *pattern in self.patterns)
     {
-        int offset = 0;
+        NSInteger offset = 0;
         NSRange range = NSMakeRange(NSNotFound, NSNotFound);
         do {
             NSString *text = mainStr.string;
@@ -78,7 +78,7 @@
             NSString *replaceText = opts.replaceText;
             if(!replaceText)
                 replaceText = subText;
-            int move = replaceText.length - subText.length;
+            NSInteger move = replaceText.length - subText.length;
             if(opts.attachment)
                 offset = 0;
             else
