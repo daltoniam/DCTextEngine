@@ -163,10 +163,12 @@
         if(options.strikeColor)
             [dict setObject:options.strikeColor forKey:NSStrikethroughColorAttributeName];
     }
-    if(options.textEffect)
-        [dict setObject:options.textEffect forKey:NSTextEffectAttributeName];
     if(options.paragraphStyle)
         [dict setObject:options.paragraphStyle forKey:NSParagraphStyleAttributeName];
+#if TARGET_OS_IPHONE
+    if(options.textEffect)
+        [dict setObject:options.textEffect forKey:NSTextEffectAttributeName];
+#endif
     return dict;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -175,10 +177,10 @@
     return [self processFont:kCTFontBoldTrait];
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
--(DCFont*)fontWeight:(CGFloat)weight
-{
-    return [self processFont:kCTFontWeightTrait];
-}
+//-(DCFont*)fontWeight:(CGFloat)weight
+//{
+//    return [self processFont:kCTFontWeightTrait];
+//}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 -(DCFont*)italicFont
 {
@@ -224,11 +226,14 @@
         //NSLog(@"size: %f",size.height);
         __block CGFloat height = MAX(0.f , ceilf(size.height));
         CFRelease(framesetter);
+        //iOS does not calculate the hieght of attachments for some reason
+#if TARGET_OS_IPHONE
         [attributedText enumerateAttribute:NSAttachmentAttributeName inRange:NSMakeRange(0, attributedText.length) options:0
                                 usingBlock:^(id value,NSRange range, BOOL *stop){
                                     NSTextAttachment *attach = value;
                                     height += attach.bounds.size.height-10;
                                 }];
+#endif
         return height;
     }
     return 0;
@@ -312,7 +317,7 @@
         [engine addPattern:[NSString stringWithFormat:@"%@.*\n",tag] found:^DCTextOptions*(NSString *regex, NSString *text){
             DCTextOptions *opts = [DCTextOptions new];
             opts.replaceText = [text stringByReplacingOccurrencesOfString:@"#" withString:@""];
-            opts.font = [[blockEngine boldFont] fontWithSize:fontSize];
+            opts.font = [DCFont fontWithName:[blockEngine boldFont].fontName size:fontSize];
             return opts;
         }];
         fontSize += 2;
