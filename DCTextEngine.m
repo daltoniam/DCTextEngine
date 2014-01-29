@@ -57,7 +57,7 @@
         [mainStr addAttribute:NSParagraphStyleAttributeName value:self.paragraphStyle range:NSMakeRange(0, mainStr.length)];
     for(DCTextPattern *pattern in self.patterns)
     {
-        int offset = 0;
+        NSInteger offset = 0;
         NSRange range = NSMakeRange(NSNotFound, NSNotFound);
         do {
             NSString *text = mainStr.string;
@@ -78,7 +78,7 @@
             NSString *replaceText = opts.replaceText;
             if(!replaceText)
                 replaceText = subText;
-            int move = replaceText.length - subText.length;
+            NSInteger move = replaceText.length - subText.length;
             if(opts.attachment)
                 offset = 0;
             else
@@ -163,10 +163,12 @@
         if(options.strikeColor)
             [dict setObject:options.strikeColor forKey:NSStrikethroughColorAttributeName];
     }
-    if(options.textEffect)
-        [dict setObject:options.textEffect forKey:NSTextEffectAttributeName];
     if(options.paragraphStyle)
         [dict setObject:options.paragraphStyle forKey:NSParagraphStyleAttributeName];
+#if TARGET_OS_IPHONE
+    if(options.textEffect)
+        [dict setObject:options.textEffect forKey:NSTextEffectAttributeName];
+#endif
     return dict;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -175,10 +177,10 @@
     return [self processFont:kCTFontBoldTrait];
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
--(DCFont*)fontWeight:(CGFloat)weight
-{
-    return [self processFont:kCTFontWeightTrait];
-}
+//-(DCFont*)fontWeight:(CGFloat)weight
+//{
+//    return [self processFont:kCTFontWeightTrait];
+//}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 -(DCFont*)italicFont
 {
@@ -224,11 +226,14 @@
         //NSLog(@"size: %f",size.height);
         __block CGFloat height = MAX(0.f , ceilf(size.height));
         CFRelease(framesetter);
+        //iOS does not calculate the hieght of attachments for some reason
+#if TARGET_OS_IPHONE
         [attributedText enumerateAttribute:NSAttachmentAttributeName inRange:NSMakeRange(0, attributedText.length) options:0
                                 usingBlock:^(id value,NSRange range, BOOL *stop){
                                     NSTextAttachment *attach = value;
                                     height += attach.bounds.size.height-10;
                                 }];
+#endif
         return height;
     }
     return 0;
@@ -275,27 +280,17 @@
         opts.color = [DCTextEngine linkColor];
         return opts;
     }];
-    [engine addPattern:@"(\\*\\*\\w+(\\s\\w+)*\\*\\*)(\\s|$)" found:^DCTextOptions*(NSString *regex, NSString *text){
+    [engine addPattern:@"(\\*\\*|__)(\\w+)(.*?)(\\*\\*|__)" found:^DCTextOptions*(NSString *regex, NSString *text){
         DCTextOptions *opts = [DCTextOptions new];
-        opts.replaceText = [text stringByReplacingOccurrencesOfString:@"*" withString:@""];
+        opts.replaceText = [text stringByReplacingOccurrencesOfString:@"**" withString:@""];
+        opts.replaceText = [opts.replaceText stringByReplacingOccurrencesOfString:@"__" withString:@""];
         opts.font = [blockEngine boldFont];
         return opts;
     }];
-    [engine addPattern:@"(__\\w+(\\s\\w+)*__)(\\s|$)" found:^DCTextOptions*(NSString *regex, NSString *text){
-        DCTextOptions *opts = [DCTextOptions new];
-        opts.replaceText = [text stringByReplacingOccurrencesOfString:@"_" withString:@""];
-        opts.font = [blockEngine boldFont];
-        return opts;
-    }];
-    [engine addPattern:@"(\\*\\w+(\\s\\w+)*\\*)(\\s|$)" found:^DCTextOptions*(NSString *regex, NSString *text){
+    [engine addPattern:@"(\\*|_)(\\w+)(.*?)(\\*|_)" found:^DCTextOptions*(NSString *regex, NSString *text){
         DCTextOptions *opts = [DCTextOptions new];
         opts.replaceText = [text stringByReplacingOccurrencesOfString:@"*" withString:@""];
-        opts.font = [blockEngine italicFont];
-        return opts;
-    }];
-    [engine addPattern:@"(_\\w+(\\s\\w+)*_)(\\s|$)" found:^DCTextOptions*(NSString *regex, NSString *text){
-        DCTextOptions *opts = [DCTextOptions new];
-        opts.replaceText = [text stringByReplacingOccurrencesOfString:@"_" withString:@""];
+        opts.replaceText = [opts.replaceText stringByReplacingOccurrencesOfString:@"_" withString:@""];
         opts.font = [blockEngine italicFont];
         return opts;
     }];
@@ -306,21 +301,56 @@
         return opts;
     }];
     CGFloat fontSize = [DCTextEngine baseHeadSize];
+    CGFloat h1Size = [DCTextEngine baseHeadSize];
+    CGFloat h2Size = [DCTextEngine baseHeadSize];
     NSString* tag = @"######";
     for(int i = 0; i < 6; i++)
     {
         [engine addPattern:[NSString stringWithFormat:@"%@.*\n",tag] found:^DCTextOptions*(NSString *regex, NSString *text){
             DCTextOptions *opts = [DCTextOptions new];
             opts.replaceText = [text stringByReplacingOccurrencesOfString:@"#" withString:@""];
-            opts.font = [[blockEngine boldFont] fontWithSize:fontSize];
+            opts.font = [DCFont fontWithName:[blockEngine boldFont].fontName size:fontSize];
             return opts;
         }];
         fontSize += 2;
+        if(i == 4)
+            h2Size = fontSize;
+        else if(i == 5)
+            h1Size = fontSize;
         if(tag.length > 1)
             tag = [tag substringFromIndex:1];
     }
-    //need to do work to support list...
+    [engine addPattern:@".+\\n=+\\n" found:^DCTextOptions*(NSString *regex, NSString *text){
+        DCTextOptions *opts = [DCTextOptions new];
+        NSRange range = [text rangeOfString:@"\\n=+" options:NSRegularExpressionSearch];
+        opts.replaceText = [text stringByReplacingCharactersInRange:range withString:@""];
+        opts.font = [DCFont fontWithName:[blockEngine boldFont].fontName size:h1Size];
+        return opts;
+    }];
+    [engine addPattern:@".+\\n\\-+\\n" found:^DCTextOptions*(NSString *regex, NSString *text){
+        DCTextOptions *opts = [DCTextOptions new];
+        NSRange range = [text rangeOfString:@"\\n\\-+" options:NSRegularExpressionSearch];
+        opts.replaceText = [text stringByReplacingCharactersInRange:range withString:@""];
+        opts.font = [DCFont fontWithName:[blockEngine boldFont].fontName size:h2Size];
+        return opts;
+    }];
+    [engine addPattern:@"\\n(\\w*)-+" found:^DCTextOptions*(NSString *regex, NSString *text){
+        return [DCTextEngine unorderList:@"-" text:text];
+    }];
+    [engine addPattern:@"\\n(\\w*)\\++" found:^DCTextOptions*(NSString *regex, NSString *text){
+        return [DCTextEngine unorderList:@"+" text:text];
+    }];
+    [engine addPattern:@"\\n(\\w*)\\*+" found:^DCTextOptions*(NSString *regex, NSString *text){
+        return [DCTextEngine unorderList:@"*" text:text];
+    }];
     return engine;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
++(DCTextOptions*)unorderList:(NSString*)replace text:(NSString*)text
+{
+    DCTextOptions *opts = [DCTextOptions new];
+    opts.replaceText = [text stringByReplacingOccurrencesOfString:replace withString:@"  •"];
+    return opts;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 +(DCColor*)linkColor

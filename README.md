@@ -33,7 +33,7 @@ __weak blockEngine = engine;
 
 
 # Notes #
-As the example shows, the engine has a very powerful parsing via regex, yet still being very simple to create the proper style.
+As the example shows, the engine has a very powerful parsing via regex, yet still being very simple to create the proper style. This engine will work on iOS 6, but you will be very limited on the style that can be applied. I **strongly** recommend using iOS 7 or above or at least 10.7 or above.
 
 # Contact #
 
