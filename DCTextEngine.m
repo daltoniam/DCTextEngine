@@ -241,7 +241,7 @@
 {
     DCTextEngine *engine = [[DCTextEngine alloc] init];
     __weak DCTextEngine *blockEngine = engine;
-    [engine addPattern:@"!\\[.*]\\(.*\\)" found:^DCTextOptions*(NSString *regex, NSString *text){
+    [engine addPattern:@"!\\[([^\\[]+)\\]\\(([^\\)]+)\\" found:^DCTextOptions*(NSString *regex, NSString *text){
         NSString *name = nil;
         NSRange nameRange = [text rangeOfString:@"]" options:0 range:NSMakeRange(2, text.length-2)];
         if(nameRange.location > 1)
@@ -258,7 +258,7 @@
         opts.color = [DCTextEngine linkColor];
         return opts;
     }];
-    [engine addPattern:@"\\[.*]\\(.*\\)" found:^DCTextOptions*(NSString *regex, NSString *text){
+    [engine addPattern:@"\\[([^\\[]+)\\]\\(([^\\)]+)\\" found:^DCTextOptions*(NSString *regex, NSString *text){
         NSString *name = nil;
         NSRange nameRange = [text rangeOfString:@"]" options:0 range:NSMakeRange(1, text.length-1)];
         if(nameRange.location > 1)
