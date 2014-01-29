@@ -156,6 +156,14 @@ typedef DCTextOptions* (^DCTextEngineDetector)(NSTextCheckingResult *result, NSS
 -(DCFont*)boldAndItalicFont;
 
 /**
+ Find and replace a string with an unordered list string
+ @param replace: the string to find and replace.
+ @param text: the text that was found.
+ @return DCTextOptions with unorder list replace text.
+ */
++(DCTextOptions*)unorderList:(NSString*)replace text:(NSString*)text;
+
+/**
  @return returns a suggestedHeight, based on the attributedString.
  */
 +(CGFloat)suggestedHeight:(NSAttributedString*)attributedText width:(CGFloat)width;

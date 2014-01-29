@@ -280,27 +280,17 @@
         opts.color = [DCTextEngine linkColor];
         return opts;
     }];
-    [engine addPattern:@"(\\*\\*\\w+(\\s\\w+)*\\*\\*)(\\s|$)" found:^DCTextOptions*(NSString *regex, NSString *text){
+    [engine addPattern:@"(\\*\\*|__)(\\w+)(.*?)(\\*\\*|__)" found:^DCTextOptions*(NSString *regex, NSString *text){
         DCTextOptions *opts = [DCTextOptions new];
-        opts.replaceText = [text stringByReplacingOccurrencesOfString:@"*" withString:@""];
+        opts.replaceText = [text stringByReplacingOccurrencesOfString:@"**" withString:@""];
+        opts.replaceText = [opts.replaceText stringByReplacingOccurrencesOfString:@"__" withString:@""];
         opts.font = [blockEngine boldFont];
         return opts;
     }];
-    [engine addPattern:@"(__\\w+(\\s\\w+)*__)(\\s|$)" found:^DCTextOptions*(NSString *regex, NSString *text){
-        DCTextOptions *opts = [DCTextOptions new];
-        opts.replaceText = [text stringByReplacingOccurrencesOfString:@"_" withString:@""];
-        opts.font = [blockEngine boldFont];
-        return opts;
-    }];
-    [engine addPattern:@"(\\*\\w+(\\s\\w+)*\\*)(\\s|$)" found:^DCTextOptions*(NSString *regex, NSString *text){
+    [engine addPattern:@"(\\*|_)(\\w+)(.*?)(\\*|_)" found:^DCTextOptions*(NSString *regex, NSString *text){
         DCTextOptions *opts = [DCTextOptions new];
         opts.replaceText = [text stringByReplacingOccurrencesOfString:@"*" withString:@""];
-        opts.font = [blockEngine italicFont];
-        return opts;
-    }];
-    [engine addPattern:@"(_\\w+(\\s\\w+)*_)(\\s|$)" found:^DCTextOptions*(NSString *regex, NSString *text){
-        DCTextOptions *opts = [DCTextOptions new];
-        opts.replaceText = [text stringByReplacingOccurrencesOfString:@"_" withString:@""];
+        opts.replaceText = [opts.replaceText stringByReplacingOccurrencesOfString:@"_" withString:@""];
         opts.font = [blockEngine italicFont];
         return opts;
     }];
@@ -311,6 +301,8 @@
         return opts;
     }];
     CGFloat fontSize = [DCTextEngine baseHeadSize];
+    CGFloat h1Size = [DCTextEngine baseHeadSize];
+    CGFloat h2Size = [DCTextEngine baseHeadSize];
     NSString* tag = @"######";
     for(int i = 0; i < 6; i++)
     {
@@ -321,11 +313,44 @@
             return opts;
         }];
         fontSize += 2;
+        if(i == 4)
+            h2Size = fontSize;
+        else if(i == 5)
+            h1Size = fontSize;
         if(tag.length > 1)
             tag = [tag substringFromIndex:1];
     }
-    //need to do work to support list...
+    [engine addPattern:@".+\\n=+\\n" found:^DCTextOptions*(NSString *regex, NSString *text){
+        DCTextOptions *opts = [DCTextOptions new];
+        NSRange range = [text rangeOfString:@"\\n=+" options:NSRegularExpressionSearch];
+        opts.replaceText = [text stringByReplacingCharactersInRange:range withString:@""];
+        opts.font = [DCFont fontWithName:[blockEngine boldFont].fontName size:h1Size];
+        return opts;
+    }];
+    [engine addPattern:@".+\\n\\-+\\n" found:^DCTextOptions*(NSString *regex, NSString *text){
+        DCTextOptions *opts = [DCTextOptions new];
+        NSRange range = [text rangeOfString:@"\\n\\-+" options:NSRegularExpressionSearch];
+        opts.replaceText = [text stringByReplacingCharactersInRange:range withString:@""];
+        opts.font = [DCFont fontWithName:[blockEngine boldFont].fontName size:h2Size];
+        return opts;
+    }];
+    [engine addPattern:@"\\n(\\w*)-+" found:^DCTextOptions*(NSString *regex, NSString *text){
+        return [DCTextEngine unorderList:@"-" text:text];
+    }];
+    [engine addPattern:@"\\n(\\w*)\\++" found:^DCTextOptions*(NSString *regex, NSString *text){
+        return [DCTextEngine unorderList:@"+" text:text];
+    }];
+    [engine addPattern:@"\\n(\\w*)\\*+" found:^DCTextOptions*(NSString *regex, NSString *text){
+        return [DCTextEngine unorderList:@"*" text:text];
+    }];
     return engine;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
++(DCTextOptions*)unorderList:(NSString*)replace text:(NSString*)text
+{
+    DCTextOptions *opts = [DCTextOptions new];
+    opts.replaceText = [text stringByReplacingOccurrencesOfString:replace withString:@"  •"];
+    return opts;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 +(DCColor*)linkColor
