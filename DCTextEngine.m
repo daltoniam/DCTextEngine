@@ -334,13 +334,13 @@
         opts.font = [DCFont fontWithName:[blockEngine boldFont].fontName size:h2Size];
         return opts;
     }];
-    [engine addPattern:@"\\n(\\w*)-+" found:^DCTextOptions*(NSString *regex, NSString *text){
+    [engine addPattern:@"\\n(\\s*)-+" found:^DCTextOptions*(NSString *regex, NSString *text){
         return [DCTextEngine unorderList:@"-" text:text];
     }];
-    [engine addPattern:@"\\n(\\w*)\\++" found:^DCTextOptions*(NSString *regex, NSString *text){
+    [engine addPattern:@"\\n(\\s*)\\++" found:^DCTextOptions*(NSString *regex, NSString *text){
         return [DCTextEngine unorderList:@"+" text:text];
     }];
-    [engine addPattern:@"\\n(\\w*)\\*+" found:^DCTextOptions*(NSString *regex, NSString *text){
+    [engine addPattern:@"\\n(\\s*)\\*+" found:^DCTextOptions*(NSString *regex, NSString *text){
         return [DCTextEngine unorderList:@"*" text:text];
     }];
     return engine;
