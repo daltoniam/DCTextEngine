@@ -280,14 +280,14 @@
         opts.color = [DCTextEngine linkColor];
         return opts;
     }];
-    [engine addPattern:@"(\\*\\*|__)(\\w+)(.*?)(\\*\\*|__)(\\s|$)" found:^DCTextOptions*(NSString *regex, NSString *text){
+    [engine addPattern:@"(\\*\\*|__)(?=\\S)(.+?[*_]*)(?<=\\S)\\1" found:^DCTextOptions*(NSString *regex, NSString *text){
         DCTextOptions *opts = [DCTextOptions new];
         opts.replaceText = [text stringByReplacingOccurrencesOfString:@"**" withString:@""];
         opts.replaceText = [opts.replaceText stringByReplacingOccurrencesOfString:@"__" withString:@""];
         opts.font = [blockEngine boldFont];
         return opts;
     }];
-    [engine addPattern:@"(\\*|_)(\\w+)(.*?)(\\*|_)(\\s|$)" found:^DCTextOptions*(NSString *regex, NSString *text){
+    [engine addPattern:@"(\\*|_)(?=\\S)(.+?)(?<=\\S)\\1" found:^DCTextOptions*(NSString *regex, NSString *text){
         DCTextOptions *opts = [DCTextOptions new];
         opts.replaceText = [text stringByReplacingOccurrencesOfString:@"*" withString:@""];
         opts.replaceText = [opts.replaceText stringByReplacingOccurrencesOfString:@"_" withString:@""];
