@@ -103,6 +103,21 @@ typedef DCTextOptions* (^DCTextEngineDetector)(NSTextCheckingResult *result, NSS
 @property(nonatomic,strong)DCFont *font;
 
 /**
+ The font to use for italics. If nil either the main font property is used (if present) or the standard OS font.
+ */
+@property(nonatomic,strong)DCFont *italicFont;
+
+/**
+ The font to use for bold. If nil either the main font property is used (if present) or the standard OS font.
+ */
+@property(nonatomic,strong)DCFont *boldFont;
+
+/**
+ The font to use for bold and italics. If nil either the main font property is used (if present) or the standard OS font.
+ */
+@property(nonatomic,strong)DCFont *boldAndItalicFont;
+
+/**
  The base color to use for styling. If nil the standard OS color is used (which is black).
  */
 @property(nonatomic,strong)DCColor *color;
@@ -139,21 +154,6 @@ typedef DCTextOptions* (^DCTextEngineDetector)(NSTextCheckingResult *result, NSS
  @param callback is the determine what attributes will be add at parse time.
  */
 -(void)addDetector:(NSTextCheckingType)types found:(DCTextEngineDetector)callback;
-
-/**
- @return returns a bold version of the font property.
- */
--(DCFont*)boldFont;
-
-/**
- @return returns a italic version of the font property.
- */
--(DCFont*)italicFont;
-
-/**
- @return returns a italic and bold version of the font property.
- */
--(DCFont*)boldAndItalicFont;
 
 /**
  Find and replace a string with an unordered list string
