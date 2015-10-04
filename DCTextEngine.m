@@ -211,7 +211,7 @@
 {
     CTFontRef font = CTFontCreateWithName((__bridge CFStringRef)self.font.fontName, self.font.pointSize, NULL);
     CTFontRef newFont = CTFontCreateCopyWithSymbolicTraits(font, 0.0, NULL, trait, trait);
-    NSString *fontName = (__bridge NSString *)CTFontCopyName(newFont, kCTFontPostScriptNameKey);
+    NSString *fontName = (__bridge_transfer NSString *)CTFontCopyName(newFont, kCTFontPostScriptNameKey);
     CFRelease(font);
     CFRelease(newFont);
     
