@@ -261,6 +261,15 @@
 {
     DCTextEngine *engine = [[DCTextEngine alloc] init];
     __weak DCTextEngine *blockEngine = engine;
+    [engine addPattern:@"(?m)^[-]\\s[^-]\\B.*" found:^DCTextOptions*(NSString *regex, NSString *text){
+        return [blockEngine unorderList:@"-" text:text];
+    }];
+    [engine addPattern:@"(?m)^[+]\\s[^+]\\B.*" found:^DCTextOptions*(NSString *regex, NSString *text){
+        return [blockEngine unorderList:@"+" text:text];
+    }];
+    [engine addPattern:@"(?m)^[*]\\s[^*]\\B.*" found:^DCTextOptions*(NSString *regex, NSString *text){
+        return [blockEngine unorderList:@"*" text:text];
+    }];
     [engine addPattern:@"!\\[([^\\[]+)\\]\\(([^\\)]+)\\" found:^DCTextOptions*(NSString *regex, NSString *text){
         NSString *name = nil;
         NSRange nameRange = [text rangeOfString:@"]" options:0 range:NSMakeRange(2, text.length-2)];
@@ -349,22 +358,32 @@
         opts.font = [DCFont fontWithName:[blockEngine boldFont].fontName size:h2Size];
         return opts;
     }];
-    [engine addPattern:@"\\n(\\s*)-+" found:^DCTextOptions*(NSString *regex, NSString *text){
-        return [DCTextEngine unorderList:@"-" text:text];
-    }];
-    [engine addPattern:@"\\n(\\s*)\\++" found:^DCTextOptions*(NSString *regex, NSString *text){
-        return [DCTextEngine unorderList:@"+" text:text];
-    }];
-    [engine addPattern:@"\\n(\\s*)\\*+" found:^DCTextOptions*(NSString *regex, NSString *text){
-        return [DCTextEngine unorderList:@"*" text:text];
-    }];
     return engine;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-+(DCTextOptions*)unorderList:(NSString*)replace text:(NSString*)text
+-(DCTextOptions*)unorderList:(NSString*)replace text:(NSString*)text
 {
+    NSString *bulletString = @"  • ";
+    NSDictionary *userAttributes = @{NSFontAttributeName: self.font};
+    CGSize bulletSize = [[NSString stringWithFormat:@"%@ ", bulletString] sizeWithAttributes:userAttributes];
+    CGFloat indentAmount = ceilf(bulletSize.width);
+    
+    NSMutableParagraphStyle *paragraphStyle = [self.paragraphStyle mutableCopy];
+    if (!paragraphStyle) {
+        paragraphStyle = [NSMutableParagraphStyle new];
+    }
+    paragraphStyle.headIndent = indentAmount;
+    
+    NSRange firstMatchRange = [text rangeOfString:replace];
+    NSString *replacedText = [text stringByReplacingOccurrencesOfString:replace
+                                                                 withString:bulletString
+                                                                    options:0
+                                                                      range:firstMatchRange];
+    
     DCTextOptions *opts = [DCTextOptions new];
-    opts.replaceText = [text stringByReplacingOccurrencesOfString:replace withString:@"  •"];
+    opts.color = self.color;
+    opts.paragraphStyle = paragraphStyle;
+    opts.replaceText = replacedText;
     return opts;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
